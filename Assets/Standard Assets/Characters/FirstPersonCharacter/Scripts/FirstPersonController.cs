@@ -30,6 +30,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private Camera m_Camera;
         private bool m_Jump;
+		private int m_Charges;
         private float m_YRotation;
         private Vector2 m_Input;
         private Vector3 m_MoveDir = Vector3.zero;
@@ -53,6 +54,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_StepCycle = 0f;
             m_NextStep = m_StepCycle/2f;
             m_Jumping = false;
+			m_Charges = 2;
             m_AudioSource = GetComponent<AudioSource>();
 			m_MouseLook.Init(transform , m_Camera.transform);
         }
@@ -74,6 +76,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 PlayLandingSound();
                 m_MoveDir.y = 0f;
                 m_Jumping = false;
+				m_Charges = 2;
             }
             if (!m_CharacterController.isGrounded && !m_Jumping && m_PreviouslyGrounded)
             {
@@ -109,7 +112,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_MoveDir.z = desiredMove.z*speed;
 
 
-            if (m_CharacterController.isGrounded)
+			if (m_Charges > 0)
             {
                 m_MoveDir.y = -m_StickToGroundForce;
 
@@ -119,6 +122,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     PlayJumpSound();
                     m_Jump = false;
                     m_Jumping = true;
+					m_Charges--;
                 }
             }
             else
