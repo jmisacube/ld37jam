@@ -108,11 +108,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                m_CharacterController.height/2f, Physics.AllLayers, QueryTriggerInteraction.Ignore);
             desiredMove = Vector3.ProjectOnPlane(desiredMove, hitInfo.normal).normalized;
 
-            m_MoveDir.x = desiredMove.x*speed;
-            m_MoveDir.z = desiredMove.z*speed;
-
 			if (m_CharacterController.isGrounded)
-            {
+			{
+				m_MoveDir.x = desiredMove.x*speed;
+				m_MoveDir.z = desiredMove.z*speed;
                 m_MoveDir.y = -m_StickToGroundForce;
 
                 if (m_Jump)
@@ -129,6 +128,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 			if (!m_CharacterController.isGrounded && m_Charges > 0 && m_Jump)
 			{
+				m_MoveDir.x = desiredMove.x*speed;
+				m_MoveDir.z = desiredMove.z*speed;
+
 				m_MoveDir.y = m_JumpSpeed;
 				PlayJumpSound();
 				m_Jump = false;
@@ -225,7 +227,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //m_IsWalking = !Input.GetKey(KeyCode.LeftShift);
 #endif
             // set the desired speed to be walking or running
-            speed = m_IsWalking ? m_WalkSpeed : m_RunSpeed;
+            //speed = m_IsWalking ? m_WalkSpeed : m_RunSpeed;
+			speed = m_RunSpeed;
             m_Input = new Vector2(horizontal, vertical);
 
             // normalize input if it exceeds 1 in combined length:
@@ -236,11 +239,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             // handle speed change to give an fov kick
             // only if the player is going to a run, is running and the fovkick is to be used
-            if (m_IsWalking != waswalking && m_UseFovKick && m_CharacterController.velocity.sqrMagnitude > 0)
+            /*if (m_IsWalking != waswalking && m_UseFovKick && m_CharacterController.velocity.sqrMagnitude > 0)
             {
                 StopAllCoroutines();
                 StartCoroutine(!m_IsWalking ? m_FovKick.FOVKickUp() : m_FovKick.FOVKickDown());
-            }
+            }*/
         }
 
 
