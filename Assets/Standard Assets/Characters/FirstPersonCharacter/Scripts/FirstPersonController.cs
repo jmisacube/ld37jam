@@ -31,6 +31,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private Camera m_Camera;
         private bool m_Jump;
 		private int m_Charges;
+		private float m_CurrentSpeed;
 		private float m_MaxInfluence;
         private float m_YRotation;
         private Vector2 m_Input;
@@ -100,7 +101,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private void FixedUpdate()
         {
             float speed;
-            GetInput(out speed);
+            GetInput();
             // always move along the camera forward as it is the direction that it being aimed at
             Vector3 desiredMove = transform.forward*m_Input.y + transform.right*m_Input.x;
 
@@ -112,8 +113,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			if (m_CharacterController.isGrounded)
 			{
-				m_MoveDir.x = desiredMove.x*speed;
-				m_MoveDir.z = desiredMove.z*speed;
+				m_MoveDir.x = desiredMove.x*m_CurrentSpeed;
+				m_MoveDir.z = desiredMove.z*m_CurrentSpeed;
                 m_MoveDir.y = -m_StickToGroundForce;
 
                 if (m_Jump)
@@ -127,26 +128,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
             else
             {
 				float resistance = 0.04f;
-				float projX = Math.Abs(m_MoveDir.x + desiredMove.x*speed*resistance);
-				float projZ = Math.Abs(m_MoveDir.z + desiredMove.z*speed*resistance);
+				float projX = Math.Abs(m_MoveDir.x + desiredMove.x*m_CurrentSpeed*resistance);
+				float projZ = Math.Abs(m_MoveDir.z + desiredMove.z*m_CurrentSpeed*resistance);
 				float infX = Math.Abs(m_MaxInfluence*desiredMove.x);
 				float infZ = Math.Abs(m_MaxInfluence*desiredMove.z);
 
 				// Allow air resistant movement, only if counterproductive to current movement
 				if (projX < Math.Abs(m_MoveDir.x) || projX < infX)
 				{
-					m_MoveDir.x += desiredMove.x*speed*resistance;
+					m_MoveDir.x += desiredMove.x*m_CurrentSpeed*resistance;
 				}
 				if (projZ < Math.Abs(m_MoveDir.z) || projZ < infZ)
 				{
-					m_MoveDir.z += desiredMove.z*speed*resistance;
+					m_MoveDir.z += desiredMove.z*m_CurrentSpeed*resistance;
 				}
                 m_MoveDir += Physics.gravity*m_GravityMultiplier*Time.fixedDeltaTime;
             }
 			if (!m_CharacterController.isGrounded && m_Charges > 0 && m_Jump)
 			{
-				m_MoveDir.x = desiredMove.x*speed;
-				m_MoveDir.z = desiredMove.z*speed;
+				m_MoveDir.x = desiredMove.x*m_CurrentSpeed;
+				m_MoveDir.z = desiredMove.z*m_CurrentSpeed;
 
 				m_MoveDir.y = m_JumpSpeed;
 				PlayJumpSound();
@@ -156,8 +157,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
             m_CollisionFlags = m_CharacterController.Move(m_MoveDir*Time.fixedDeltaTime);
 
-            ProgressStepCycle(speed);
-            UpdateCameraPosition(speed);
+			ProgressStepCycle(m_CurrentSpeed);
+			UpdateCameraPosition(m_CurrentSpeed);
 
             m_MouseLook.UpdateCursorLock();
         }
@@ -219,7 +220,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
 
-        private void GetInput(out float speed)
+        private void GetInput()
         {
             // Read input
             float horizontal = CrossPlatformInputManager.GetAxis("Horizontal");
@@ -234,8 +235,41 @@ namespace UnityStandardAssets.Characters.FirstPerson
 #endif
             // set the desired speed to be walking or running
             //speed = m_IsWalking ? m_WalkSpeed : m_RunSpeed;
-			speed = m_RunSpeed;
+			//speed = m_RunSpeed;
             m_Input = new Vector2(horizontal, vertical);
+
+			// Only allow movement acceleration/deceleration on ground (except air resistance)
+			if (m_CharacterController.isGrounded)
+			{
+				if (m_Input.sqrMagnitude > 0)
+				{
+					// Acceleration
+					if (m_CurrentSpeed <= 0.05f)
+					{
+						m_CurrentSpeed = m_RunSpeed*0.05f;
+					}
+					else if (m_CurrentSpeed < m_RunSpeed)
+					{
+						m_CurrentSpeed += (m_RunSpeed - m_CurrentSpeed)*0.1f;
+					}
+					else
+					{
+						m_CurrentSpeed = m_RunSpeed;
+					}
+				}
+				else
+				{
+					// Deceleration
+					if (m_CurrentSpeed > 0.05f)
+					{
+						m_CurrentSpeed = m_CurrentSpeed*0.8f;
+					}
+					else
+					{
+						m_CurrentSpeed = 0;
+					}
+				}
+			}
 
             // normalize input if it exceeds 1 in combined length:
             if (m_Input.sqrMagnitude > 1)
