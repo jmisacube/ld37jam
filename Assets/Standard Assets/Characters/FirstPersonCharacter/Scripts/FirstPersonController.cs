@@ -31,6 +31,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private Camera m_Camera;
         private bool m_Jump;
 		private int m_Charges;
+		private float m_MaxInfluence;
         private float m_YRotation;
         private Vector2 m_Input;
         private Vector3 m_MoveDir = Vector3.zero;
@@ -55,6 +56,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_NextStep = m_StepCycle/2f;
             m_Jumping = false;
 			m_Charges = 2;
+			m_MaxInfluence = 10;
             m_AudioSource = GetComponent<AudioSource>();
 			m_MouseLook.Init(transform , m_Camera.transform);
         }
@@ -124,6 +126,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             else
             {
+				float resistance = 0.04f;
+				float projX = Math.Abs(m_MoveDir.x + desiredMove.x*speed*resistance);
+				float projZ = Math.Abs(m_MoveDir.z + desiredMove.z*speed*resistance);
+				float infX = Math.Abs(m_MaxInfluence*desiredMove.x);
+				float infZ = Math.Abs(m_MaxInfluence*desiredMove.z);
+
+				// Allow air resistant movement, only if counterproductive to current movement
+				if (projX < Math.Abs(m_MoveDir.x) || projX < infX)
+				{
+					m_MoveDir.x += desiredMove.x*speed*resistance;
+				}
+				if (projZ < Math.Abs(m_MoveDir.z) || projZ < infZ)
+				{
+					m_MoveDir.z += desiredMove.z*speed*resistance;
+				}
                 m_MoveDir += Physics.gravity*m_GravityMultiplier*Time.fixedDeltaTime;
             }
 			if (!m_CharacterController.isGrounded && m_Charges > 0 && m_Jump)
