@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
 using UnityEngine.UI;
+using UnityEngine.Audio;
 using Random = UnityEngine.Random;
 
 namespace UnityStandardAssets.Characters.FirstPerson
@@ -24,12 +25,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] private bool m_UseHeadBob;
         [SerializeField] private CurveControlledBob m_HeadBob = new CurveControlledBob();
         [SerializeField] private LerpControlledBob m_JumpBob = new LerpControlledBob();
-        [SerializeField] private float m_StepInterval;
+		[SerializeField] private float m_StepInterval;
+		[SerializeField] private AudioMixer m_Mixer;
+		[SerializeField] private AudioSource m_AudioSource;
         [SerializeField] private AudioClip[] m_FootstepSounds;    // an array of footstep sounds that will be randomly selected from.
         [SerializeField] private AudioClip m_JumpSound;           // the sound played when character leaves the ground.
 		[SerializeField] private AudioClip m_LandSound;           // the sound played when character touches back on ground.
 		[SerializeField] private AudioClip m_AirjumpSound;
 		[SerializeField] private AudioClip m_AirdashSound;
+		[SerializeField] private AudioMixerGroup m_JumpGroup;
+		[SerializeField] private AudioMixerGroup m_WalkGroup;
+		[SerializeField] private AudioMixerGroup m_DashGroup;
+		[SerializeField] private AudioMixerGroup m_LandGroup;
         [SerializeField] private Image m_JumpCircle_TR;
         [SerializeField] private Image m_JumpCircle_BR;
         [SerializeField] private Image m_JumpCircle_TL;
@@ -53,8 +60,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private Vector3 m_OriginalCameraPosition;
         private float m_StepCycle;
         private float m_NextStep;
-        private bool m_Jumping;
-        private AudioSource m_AudioSource;
+		private bool m_Jumping;
 
         // Use this for initialization
         private void Start()
@@ -73,7 +79,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			m_AirdashTime = 0f;
 			m_Dashing = false;
 			m_Dash = false;
-            m_AudioSource = GetComponent<AudioSource>();
 			m_MouseLook.Init(transform , m_Camera.transform);
         }
 
@@ -118,15 +123,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             m_PreviouslyGrounded = m_CharacterController.isGrounded;
         }
-
-
-        private void PlayLandingSound()
-        {
-            m_AudioSource.clip = m_LandSound;
-            m_AudioSource.Play();
-            m_NextStep = m_StepCycle + .5f;
-        }
-
 
         private void FixedUpdate()
         {
@@ -238,28 +234,37 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			UpdateCameraPosition(m_CurrentSpeed);
 
             m_MouseLook.UpdateCursorLock();
-        }
-
+		}
+			
+		private void PlayLandingSound()
+		{
+			m_AudioSource.outputAudioMixerGroup = m_LandGroup;
+			m_AudioSource.clip = m_LandSound;
+			m_AudioSource.Play();
+			m_NextStep = m_StepCycle + .5f;
+		}
 
         private void PlayJumpSound()
-        {
+		{
+			m_AudioSource.outputAudioMixerGroup = m_JumpGroup;
             m_AudioSource.clip = m_JumpSound;
             m_AudioSource.Play();
 		}
 
 		private void PlayAirjumpSound()
 		{
+			m_AudioSource.outputAudioMixerGroup = m_JumpGroup;
 			m_AudioSource.clip = m_AirjumpSound;
 			m_AudioSource.Play();
 		}
 
 		private void PlayAirdashSound()
 		{
+			m_AudioSource.outputAudioMixerGroup = m_DashGroup;
 			m_AudioSource.clip = m_AirdashSound;
 			m_AudioSource.Play();
 		}
-
-
+			
         private void ProgressStepCycle(float speed)
         {
             if (m_CharacterController.velocity.sqrMagnitude > 0 && (m_Input.x != 0 || m_Input.y != 0))
@@ -286,7 +291,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
 			int n = (int)(Math.Floor((decimal)(Random.Range(0, m_FootstepSounds.Length))));
 
+			m_AudioSource.outputAudioMixerGroup = m_WalkGroup;
 			m_AudioSource.clip = m_FootstepSounds[n];
+			m_AudioSource.volume = 0.2f;
 			m_AudioSource.Play();
         }
 
