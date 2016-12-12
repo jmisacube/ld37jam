@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
+using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
 namespace UnityStandardAssets.Characters.FirstPerson
@@ -27,6 +28,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] private AudioClip[] m_FootstepSounds;    // an array of footstep sounds that will be randomly selected from.
         [SerializeField] private AudioClip m_JumpSound;           // the sound played when character leaves the ground.
         [SerializeField] private AudioClip m_LandSound;           // the sound played when character touches back on ground.
+        [SerializeField] private Image m_JumpCircle_TR;
+        [SerializeField] private Image m_JumpCircle_BR;
+        [SerializeField] private Image m_JumpCircle_TL;
+        [SerializeField] private Image m_JumpCircle_BL;
 
         private Camera m_Camera;
         private bool m_Jump;
@@ -80,6 +85,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 m_MoveDir.y = 0f;
                 m_Jumping = false;
 				m_Charges = 2;
+                m_JumpCircle_TL.GetComponent<UICircle>().setCharged(true);
+                m_JumpCircle_TR.GetComponent<UICircle>().setCharged(true);
+                m_JumpCircle_BL.GetComponent<UICircle>().setCharged(true);
+                m_JumpCircle_BR.GetComponent<UICircle>().setCharged(true);
             }
             if (!m_CharacterController.isGrounded && !m_Jumping && m_PreviouslyGrounded)
             {
@@ -100,7 +109,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private void FixedUpdate()
         {
-            float speed;
             GetInput();
             // always move along the camera forward as it is the direction that it being aimed at
             Vector3 desiredMove = transform.forward*m_Input.y + transform.right*m_Input.x;
@@ -148,6 +156,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				m_MoveDir.x = desiredMove.x*m_CurrentSpeed;
 				m_MoveDir.z = desiredMove.z*m_CurrentSpeed;
+
+                // update circle UI
+                if (m_Charges == 2)
+                {
+                    m_JumpCircle_TL.GetComponent<UICircle>().setCharged(false);
+                    m_JumpCircle_TR.GetComponent<UICircle>().setCharged(false);
+                }
+                else
+                {
+                    m_JumpCircle_BL.GetComponent<UICircle>().setCharged(false);
+                    m_JumpCircle_BR.GetComponent<UICircle>().setCharged(false);
+                }
 
 				m_MoveDir.y = m_JumpSpeed;
 				PlayJumpSound();
@@ -225,8 +245,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // Read input
             float horizontal = CrossPlatformInputManager.GetAxis("Horizontal");
             float vertical = CrossPlatformInputManager.GetAxis("Vertical");
-
-            bool waswalking = m_IsWalking;
 
 #if !MOBILE_INPUT
             // On standalone builds, walk/run speed is modified by a key press.
