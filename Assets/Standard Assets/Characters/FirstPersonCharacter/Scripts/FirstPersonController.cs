@@ -27,7 +27,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] private LerpControlledBob m_JumpBob = new LerpControlledBob();
 		[SerializeField] private float m_StepInterval;
 		[SerializeField] private AudioMixer m_Mixer;
-		[SerializeField] private AudioSource m_AudioSource;
+		[SerializeField] private AudioSource m_JumpAudioSource;
+		[SerializeField] private AudioSource m_WalkAudioSource;
+		[SerializeField] private AudioSource m_DashAudioSource;
+		[SerializeField] private AudioSource m_LandAudioSource;
         [SerializeField] private AudioClip[] m_FootstepSounds;    // an array of footstep sounds that will be randomly selected from.
         [SerializeField] private AudioClip m_JumpSound;           // the sound played when character leaves the ground.
 		[SerializeField] private AudioClip m_LandSound;           // the sound played when character touches back on ground.
@@ -238,31 +241,31 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			
 		private void PlayLandingSound()
 		{
-			m_AudioSource.outputAudioMixerGroup = m_LandGroup;
-			m_AudioSource.clip = m_LandSound;
-			m_AudioSource.Play();
+			m_LandAudioSource.outputAudioMixerGroup = m_LandGroup;
+			m_LandAudioSource.clip = m_LandSound;
+			m_LandAudioSource.Play();
 			m_NextStep = m_StepCycle + .5f;
 		}
 
         private void PlayJumpSound()
 		{
-			m_AudioSource.outputAudioMixerGroup = m_JumpGroup;
-            m_AudioSource.clip = m_JumpSound;
-            m_AudioSource.Play();
+			m_JumpAudioSource.outputAudioMixerGroup = m_JumpGroup;
+			m_JumpAudioSource.clip = m_JumpSound;
+			m_JumpAudioSource.Play();
 		}
 
 		private void PlayAirjumpSound()
 		{
-			m_AudioSource.outputAudioMixerGroup = m_JumpGroup;
-			m_AudioSource.clip = m_AirjumpSound;
-			m_AudioSource.Play();
+			m_JumpAudioSource.outputAudioMixerGroup = m_JumpGroup;
+			m_JumpAudioSource.clip = m_AirjumpSound;
+			m_JumpAudioSource.Play();
 		}
 
 		private void PlayAirdashSound()
 		{
-			m_AudioSource.outputAudioMixerGroup = m_DashGroup;
-			m_AudioSource.clip = m_AirdashSound;
-			m_AudioSource.Play();
+			m_DashAudioSource.outputAudioMixerGroup = m_DashGroup;
+			m_DashAudioSource.clip = m_AirdashSound;
+			m_DashAudioSource.Play();
 		}
 			
         private void ProgressStepCycle(float speed)
@@ -291,10 +294,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
 			int n = (int)(Math.Floor((decimal)(Random.Range(0, m_FootstepSounds.Length))));
 
-			m_AudioSource.outputAudioMixerGroup = m_WalkGroup;
-			m_AudioSource.clip = m_FootstepSounds[n];
-			m_AudioSource.volume = 0.2f;
-			m_AudioSource.Play();
+			m_WalkAudioSource.outputAudioMixerGroup = m_WalkGroup;
+			m_WalkAudioSource.clip = m_FootstepSounds[n];
+			m_WalkAudioSource.volume = 0.2f;
+			m_WalkAudioSource.Play();
         }
 
 
