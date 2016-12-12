@@ -38,6 +38,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private int m_Charges;
 		private float m_CurrentSpeed;
 		private float m_MaxInfluence;
+		private float m_AirdashMulti;
+		private float m_AirdashTime;
+		private bool m_Dashing;
+		private bool m_Dash;
         private float m_YRotation;
         private Vector2 m_Input;
         private Vector3 m_MoveDir = Vector3.zero;
@@ -62,7 +66,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_NextStep = m_StepCycle/2f;
             m_Jumping = false;
 			m_Charges = 2;
-			m_MaxInfluence = 10;
+			m_MaxInfluence = 10f;
+			m_AirdashMulti = 2f;
+			m_AirdashTime = 0f;
+			m_Dashing = false;
+			m_Dash = false;
             m_AudioSource = GetComponent<AudioSource>();
 			m_MouseLook.Init(transform , m_Camera.transform);
         }
@@ -77,6 +85,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 m_Jump = CrossPlatformInputManager.GetButtonDown("Jump");
             }
+
+			// Dash state
+			if (!m_Dash)
+			{
+				m_Dash = CrossPlatformInputManager.GetButtonDown("Dash");
+
+				if (m_CharacterController.isGrounded || m_Dashing || m_Charges == 0)
+				{
+					m_Dash = false;
+				}
+			}
 
             if (!m_PreviouslyGrounded && m_CharacterController.isGrounded)
             {
@@ -175,6 +194,38 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				m_Jumping = true;
 				m_Charges--;
 			}
+
+			// Dashing
+			if (m_Dashing)
+			{
+				m_AirdashTime +=Time.fixedDeltaTime;
+				if (m_AirdashTime >= 0.26f)
+				{
+					m_AirdashTime = 0f;
+					m_Dashing = false;
+				}
+			}
+			else if (m_Dash)
+			{
+				m_Dash = false;
+				m_Dashing = true;
+				m_Charges--;
+				m_CurrentSpeed = m_CurrentSpeed * m_AirdashMulti;
+
+				if (m_CurrentSpeed < m_RunSpeed)
+				{
+					m_CurrentSpeed = m_RunSpeed;
+				}
+				if (m_MoveDir.y < 0)
+				{
+					m_MoveDir.y = 0;
+				}
+
+				m_MoveDir.x = transform.forward.x*m_CurrentSpeed;
+				m_MoveDir.z = transform.forward.z*m_CurrentSpeed;
+				m_MoveDir.y = m_MoveDir.y*m_AirdashMulti;
+			}
+
             m_CollisionFlags = m_CharacterController.Move(m_MoveDir*Time.fixedDeltaTime);
 
 			ProgressStepCycle(m_CurrentSpeed);
