@@ -27,7 +27,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] private float m_StepInterval;
         [SerializeField] private AudioClip[] m_FootstepSounds;    // an array of footstep sounds that will be randomly selected from.
         [SerializeField] private AudioClip m_JumpSound;           // the sound played when character leaves the ground.
-        [SerializeField] private AudioClip m_LandSound;           // the sound played when character touches back on ground.
+		[SerializeField] private AudioClip m_LandSound;           // the sound played when character touches back on ground.
+		[SerializeField] private AudioClip m_AirjumpSound;
+		[SerializeField] private AudioClip m_AirdashSound;
         [SerializeField] private Image m_JumpCircle_TR;
         [SerializeField] private Image m_JumpCircle_BR;
         [SerializeField] private Image m_JumpCircle_TL;
@@ -193,6 +195,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				m_Jump = false;
 				m_Jumping = true;
 				m_Charges--;
+
+				PlayAirjumpSound();
 			}
 
 			// Dashing
@@ -224,6 +228,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				m_MoveDir.x = transform.forward.x*m_CurrentSpeed;
 				m_MoveDir.z = transform.forward.z*m_CurrentSpeed;
 				m_MoveDir.y = m_MoveDir.y*m_AirdashMulti;
+
+				PlayAirdashSound();
 			}
 
             m_CollisionFlags = m_CharacterController.Move(m_MoveDir*Time.fixedDeltaTime);
@@ -239,7 +245,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             m_AudioSource.clip = m_JumpSound;
             m_AudioSource.Play();
-        }
+		}
+
+		private void PlayAirjumpSound()
+		{
+			m_AudioSource.clip = m_AirjumpSound;
+			m_AudioSource.Play();
+		}
+
+		private void PlayAirdashSound()
+		{
+			m_AudioSource.clip = m_AirdashSound;
+			m_AudioSource.Play();
+		}
 
 
         private void ProgressStepCycle(float speed)
@@ -257,13 +275,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             m_NextStep = m_StepCycle + m_StepInterval;
 
-            PlayFootStepAudio();
+			if (m_CharacterController.isGrounded)
+			{
+            	PlayFootStepAudio();
+			}
         }
 
 
         private void PlayFootStepAudio()
         {
-            return;
+			int n = (int)(Math.Floor((decimal)(Random.Range(0, m_FootstepSounds.Length))));
+
+			m_AudioSource.clip = m_FootstepSounds[n];
+			m_AudioSource.Play();
         }
 
 
