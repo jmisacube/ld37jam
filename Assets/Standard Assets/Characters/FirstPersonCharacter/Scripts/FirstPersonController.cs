@@ -210,6 +210,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 			else if (m_Dash)
 			{
+				// update circle UI
+				if (m_Charges == 2)
+				{
+					m_JumpCircle_TL.GetComponent<UICircle>().setCharged(false);
+					m_JumpCircle_TR.GetComponent<UICircle>().setCharged(false);
+				}
+				else
+				{
+					m_JumpCircle_BL.GetComponent<UICircle>().setCharged(false);
+					m_JumpCircle_BR.GetComponent<UICircle>().setCharged(false);
+				}
+
 				m_Dash = false;
 				m_Dashing = true;
 				m_Charges--;
