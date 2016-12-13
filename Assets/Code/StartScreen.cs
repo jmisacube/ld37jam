@@ -2,7 +2,12 @@
 
 public class StartScreen : MonoBehaviour
 {
-	public void OnStartClick()
+    private void Start()
+    {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+    public void OnStartClick()
     {
         Application.LoadLevel(1);
     }

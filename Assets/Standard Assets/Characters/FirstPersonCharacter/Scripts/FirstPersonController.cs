@@ -47,6 +47,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private Camera m_Camera;
         private bool m_Jump;
+        private float m_JumpBufferTime;
 		private int m_Charges;
 		private float m_CurrentSpeed;
 		private float m_MaxInfluence;
@@ -76,6 +77,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_StepCycle = 0f;
             m_NextStep = m_StepCycle/2f;
             m_Jumping = false;
+            m_JumpBufferTime = 0f;
 			m_Charges = 2;
 			m_MaxInfluence = 10f;
 			m_AirdashMulti = 2f;
@@ -91,7 +93,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             RotateView();
             // the jump state needs to read here to make sure it is not missed
-            if (!m_Jump)
+            // Buffer must not have run out
+            if (!m_Jump && m_JumpBufferTime <= 0f)
             {
                 m_Jump = CrossPlatformInputManager.GetButtonDown("Jump");
             }
@@ -129,6 +132,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private void FixedUpdate()
         {
+            // Jump buffer
+            if (m_Jump)
+            {
+                m_JumpBufferTime += Time.deltaTime;
+            }
+
+            // Reset jump buffer
+            if (m_JumpBufferTime >= 0.2f)
+            {
+                m_Jump = false;
+                m_JumpBufferTime = 0f;
+            }
+
             GetInput();
             // always move along the camera forward as it is the direction that it being aimed at
             Vector3 desiredMove = transform.forward*m_Input.y + transform.right*m_Input.x;
@@ -151,6 +167,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     PlayJumpSound();
                     m_Jump = false;
                     m_Jumping = true;
+                    m_JumpBufferTime = 0f;
                 }
             }
             else
@@ -194,6 +211,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				m_Jump = false;
 				m_Jumping = true;
 				m_Charges--;
+                m_JumpBufferTime = 0f;
 
 				PlayAirjumpSound();
 			}
